@@ -4,11 +4,14 @@
 import dash
 from dash import dcc
 from dash import html
+from plotly.subplots import make_subplots
+from plotly import graph_objects as go
+
 from data import load_img
 import plotly.express as px
 import pandas as pd
 
-from utils import mask_nan
+from utils import mask_nan, conv_to_pillow
 
 app = dash.Dash(__name__)
 
@@ -21,7 +24,7 @@ df = pd.DataFrame({
     "City": ["SF", "SF", "SF", "Montreal", "Montreal", "Montreal"]
 })
 
-fig = px.bar(df, x="Fruit", y="Amount", color="City", barmode="group")
+# fig = px.bar(df, x="Fruit", y="Amount", color="City", barmode="group")
 
 sxm_fname = "C:\\Users\SPM\OneDrive\\The University of Nottingham\\NottsNano - Instruments\\Unisoku LT\Results\\2021_12_13_TrainingWheelsOff\Au(111)_manipulation_1198.sxm"
 sxm_data = load_img(sxm_fname)
@@ -29,18 +32,33 @@ sxm_channel = "Z"
 sxm_trace_direction = "forward"
 sxm_img = sxm_data[sxm_channel][sxm_trace_direction]
 
-fig_sxm = px.imshow(mask_nan(sxm_img), color_continuous_scale="gray")
+# top_fig = make_subplots(rows=1, cols=2)
+
+# fig_sxm = px.imshow(mask_nan(sxm_img), color_continuous_scale="Gray").data[0]
+fig_spectra_pos_on_sxm = go.Figure()
+fig_spectra_pos_on_sxm.add_trace(go.Scatter(x=[0, 0.5, 1, 2, 2.2], y=[1.23, 2.5, 0.42, 3, 1]))
+fig_spectra_pos_on_sxm.add_layout_image(dict(
+            source=conv_to_pillow(mask_nan(sxm_img)),
+            xref="x domain",
+            yref="y domain",
+            x=1,
+            y=1,
+            xanchor="right",
+            yanchor="top",
+            sizex=1,
+            sizey=1))
+
 
 app.layout = html.Div(children=[
-    html.H1(children='Hello Dash'),
+    html.H1(children='Spectra Explorer'),
 
     html.Div(children='''
-        Dash: A web application framework for your data.
+        Hooray :).
     '''),
 
     dcc.Graph(
         id='ref-image',
-        figure=fig_sxm
+        figure=fig_spectra_pos_on_sxm
     )
 ])
 
