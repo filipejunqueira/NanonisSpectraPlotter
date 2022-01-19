@@ -26,27 +26,37 @@ df = pd.DataFrame({
 
 # fig = px.bar(df, x="Fruit", y="Amount", color="City", barmode="group")
 
-sxm_fname = "C:\\Users\SPM\OneDrive\\The University of Nottingham\\NottsNano - Instruments\\Unisoku LT\Results\\2021_12_13_TrainingWheelsOff\Au(111)_manipulation_1198.sxm"
+sxm_fname = "C:\\Users\omicron_vt\\The University of Nottingham\\NottsNano - Instruments\\Unisoku LT\Results\\2021_12_13_TrainingWheelsOff\Au(111)_manipulation_1198.sxm"   #TODO replace this with upload component, eventually multiupload for dat spectra
 sxm_data = load_img(sxm_fname)
 sxm_channel = "Z"
 sxm_trace_direction = "forward"
 sxm_img = sxm_data[sxm_channel][sxm_trace_direction]
 
-# top_fig = make_subplots(rows=1, cols=2)
+top_fig = make_subplots(rows=2, cols=2,
+                        specs=[[{}, {}],
+                               [{"colspan": 2}, None]],
+                        column_widths=[0.5, 0.5]
+                        )
 
 # fig_sxm = px.imshow(mask_nan(sxm_img), color_continuous_scale="Gray").data[0]
-fig_spectra_pos_on_sxm = go.Figure()
-fig_spectra_pos_on_sxm.add_trace(go.Scatter(x=[0, 0.5, 1, 2, 2.2], y=[1.23, 2.5, 0.42, 3, 1]))
-fig_spectra_pos_on_sxm.add_layout_image(dict(
+# fig_spectra_pos_on_sxm = go.Figure()
+# top_fig.add_trace(px.imshow(mask_nan(sxm_img), aspect="equal", color_continuous_scale="Gray").data[0], row=1, col=1)
+# top_fig.add_trace(go.Image())
+top_fig.add_trace(go.Scatter(x=[0, 0.5, 1, 2, 2.2], y=[1.23, 2.5, 0.42, 3, 1]), row=1, col=1)
+top_fig.add_layout_image(
             source=conv_to_pillow(mask_nan(sxm_img)),
+            row=1,
+            col=1,
             xref="x domain",
             yref="y domain",
             x=1,
-            y=1,
+            y=0,
             xanchor="right",
-            yanchor="top",
+            yanchor="bottom",
+            opacity=0.8,
             sizex=1,
-            sizey=1))
+            sizey=1,
+            layer="below")
 
 
 app.layout = html.Div(children=[
@@ -58,7 +68,7 @@ app.layout = html.Div(children=[
 
     dcc.Graph(
         id='ref-image',
-        figure=fig_spectra_pos_on_sxm
+        figure=top_fig
     )
 ])
 
