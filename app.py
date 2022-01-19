@@ -4,10 +4,10 @@
 import dash
 import dash_bootstrap_components as dbc
 from dash import dcc, html
+from dash.dependencies import Input, Output, State
 from dash_bootstrap_templates import load_figure_template
 from plotly import graph_objects as go, express as px
 from plotly.subplots import make_subplots
-import numpy as np
 
 from data import load_img, sxm2pil, dot3ds_params2pd, load_grid
 from utils import mask_nan, build_spectra_hover
@@ -31,8 +31,7 @@ hovertemplate = build_spectra_hover(dot3ds_pandas)
 
 top_fig = make_subplots(rows=1, cols=2,
                         specs=[[{"secondary_y": True}, {"secondary_y": False}]])
-
-top_fig.update_layout(title="filename",
+top_fig.update_layout(title="Waiting For Input",
                       width=700,
                       height=350,
                       autosize=False,
@@ -41,6 +40,16 @@ top_fig.update_layout(title="filename",
                       xaxis2={'anchor': 'y', 'overlaying': 'x', 'side': 'bottom'},
                       yaxis={'side': 'right'},
                       yaxis2={'side': 'left'})
+
+
+# @app.callback(Output("ref-image", "figure"),
+#               Input("upload-sxm-data", "contents"),
+#               State('upload-sxm-data', 'filename'),
+#               State('upload-sxm-data', 'last_modified')
+#               )
+def update_filename(list_of_contents, filename, list_of_dates):
+    top_fig.update_layout(title=filename)
+
 
 top_fig.add_trace(px.imshow(sxm2pil(mask_nan(sxm_img))).data[0],
                   secondary_y=False, row=1, col=1)
@@ -62,7 +71,7 @@ root_layout = html.Div(children=[
         id='upload-sxm-data',
         children=html.Div([
             'Drag and Drop or ',
-            html.A('Select a .sxm File')
+            html.A('Select a .3ds File')
         ]),
         style={
             'width': '680px',
