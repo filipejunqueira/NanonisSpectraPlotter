@@ -7,9 +7,10 @@ from dash import dcc, html
 from dash_bootstrap_templates import load_figure_template
 from plotly import graph_objects as go, express as px
 from plotly.subplots import make_subplots
+import numpy as np
 
 from data import load_img, sxm2pil, dot3ds_params2pd, load_grid
-from utils import mask_nan
+from utils import mask_nan, build_spectra_hover
 
 dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates@V1.0.4/dbc.min.css"
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.DARKLY, dbc_css])
@@ -22,25 +23,11 @@ sxm_channel = "Z"
 sxm_trace_direction = "forward"
 sxm_img = sxm_data[sxm_channel][sxm_trace_direction]
 
-dot3ds_fname = "C:\\Users\omicron_vt\The University of Nottingham\\NottsNano - Instruments\\Unisoku LT\Results\\2021_12_13_TrainingWheelsOff\AnotherAtomDepositionAttempt_006.3ds"
+dot3ds_fname = "C:\\Users\omicron_vt\The University of Nottingham\\NottsNano - Instruments\\Unisoku LT\Results\\2021_12_13_TrainingWheelsOff\AnotherAtomDepositionAttempt_046.3ds"
 dot3ds_data = load_grid(dot3ds_fname)
 dot3ds_pandas = dot3ds_params2pd(dot3ds_data)
-#
-# top_fig = make_subplots(rows=1, cols=2, specs=[[{"secondary_y": True}, {"secondary_y": False}]])
-# top_fig.update_layout(
-#     title="filename",
-#     width=700,
-#     height=350,
-#     autosize=False,
-#     template="darkly",
-#     xaxis2= {"anchor": "y", "overlaying": "x", "side": "top"})
-# top_fig.update_xaxes(matches='x')
-# top_fig.update_yaxes(matches='y')
-#
-# top_fig.add_trace(go.Scatter(x=dot3ds_pandas["X (m)"], y=dot3ds_pandas["Y (m)"]), row=1, col=1, secondary_y=False)
-# # , mode="markers", hoverinfo= "x+y+text", hovertext=dot3ds_pandas
-# top_fig.add_trace(px.imshow(sxm2pil(mask_nan(sxm_img))).data[0], secondary_y=True)
-#
+
+hovertemplate = build_spectra_hover(dot3ds_pandas)
 
 top_fig = make_subplots(rows=1, cols=2,
                         specs=[[{"secondary_y": True}, {"secondary_y": False}]])
@@ -50,15 +37,19 @@ top_fig.update_layout(title="filename",
                       height=350,
                       autosize=False,
                       template="darkly",
-                    xaxis={'side': 'top', 'ticks': ''},
+                      xaxis={'side': 'top'},
                       xaxis2={'anchor': 'y', 'overlaying': 'x', 'side': 'bottom'},
                       yaxis={'side': 'right'},
-                      yaxis2={'side': 'left', 'ticks': ''})
+                      yaxis2={'side': 'left'})
 
 top_fig.add_trace(px.imshow(sxm2pil(mask_nan(sxm_img))).data[0],
                   secondary_y=False, row=1, col=1)
-top_fig.add_trace(go.Scatter(x=dot3ds_pandas["X (m)"], y=dot3ds_pandas["Y (m)"],
-                             name="Spectra Positions"), secondary_y=True, row=1, col=1)
+
+top_fig.add_trace(go.Scatter(x=dot3ds_pandas["X (m)"].round(12), y=dot3ds_pandas["Z (m)"].round(12), mode="markers",
+                             hoverinfo='text',
+                             text=dot3ds_pandas.columns,
+                             customdata=dot3ds_pandas.values,
+                             hovertemplate=hovertemplate), secondary_y=True, row=1, col=1)
 
 top_fig.data[1].update(xaxis='x2')
 top_fig.layout.xaxis.update(showticklabels=False)
