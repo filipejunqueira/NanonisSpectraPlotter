@@ -6,6 +6,7 @@ from dash import dcc
 from dash import html
 from plotly.subplots import make_subplots
 from plotly import graph_objects as go
+import dash_bootstrap_components as dbc
 
 from data import load_img
 import plotly.express as px
@@ -14,6 +15,8 @@ import pandas as pd
 from utils import mask_nan, conv_to_pillow
 
 app = dash.Dash(__name__)
+                # external_stylesheets=[dbc.themes.SOLAR]) #solar, superhero
+app.title = "Spectra Explorer"
 
 
 # assume you have a "long-form" data frame
@@ -32,11 +35,12 @@ sxm_channel = "Z"
 sxm_trace_direction = "forward"
 sxm_img = sxm_data[sxm_channel][sxm_trace_direction]
 
-top_fig = make_subplots(rows=2, cols=2,
-                        specs=[[{}, {}],
-                               [{"colspan": 2}, None]],
-                        column_widths=[0.5, 0.5]
-                        )
+top_fig = make_subplots(rows=1, cols=2)
+top_fig.update_layout(
+    width=700,
+    height=350,
+    autosize=False,
+    template="plotly")
 
 # fig_sxm = px.imshow(mask_nan(sxm_img), color_continuous_scale="Gray").data[0]
 # fig_spectra_pos_on_sxm = go.Figure()
@@ -60,17 +64,19 @@ top_fig.add_layout_image(
 
 
 app.layout = html.Div(children=[
-    html.H1(children='Spectra Explorer'),
-
-    html.Div(children='''
-        Hooray :).
-    '''),
-
     dcc.Graph(
         id='ref-image',
         figure=top_fig
     )
 ])
+
+# html.Label(["Select color bar "
+#             "range:",
+#             dcc.RangeSlider(
+#                 id='colorbar-slider',
+# min=0. max=10,
+# tooltip={"placement": "bottom", "always_visible": True}
+#             ), ])
 
 if __name__ == '__main__':
     app.run_server(debug=True)
