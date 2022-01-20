@@ -2,11 +2,12 @@
 # visit http://127.0.0.1:8050/ in your web browser.
 
 import json
-import numpy as np
+
 import dash
 import dash_bootstrap_components as dbc
+import numpy as np
 from dash import dcc, html
-from dash.dependencies import Input, Output, State
+from dash.dependencies import Input, Output
 from dash_bootstrap_templates import load_figure_template
 from plotly import graph_objects as go
 from plotly.subplots import make_subplots
@@ -21,28 +22,25 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.DARKLY, dbc_css])
 app.title = "Spectra Explorer"
 load_figure_template(["darkly"])
 
-fig = go.Figure()
-
-top_fig = make_subplots(rows=1, cols=1,
-                        specs=[[{"secondary_y": True}]])
+top_fig = make_subplots(specs=[[{"secondary_y": True}]])
 top_fig.update_layout(title="Spectra Position",
-                      width=500,
-                      height=500,
-                      autosize=False,
+                      width=600,
+                      height=600,
+                      autosize=True,
                       template="darkly",
                       xaxis={'side': 'top'},
                       xaxis2={'anchor': 'y', 'overlaying': 'x', 'side': 'bottom'},
                       yaxis={'side': 'right'},
                       yaxis2={'side': 'left'},
-                      margin={'t': 100, 'b': 20, 'r': 20, 'l': 5})
+                      margin={'t': 100, 'b': 20, 'r': 20, 'l': 20})
 top_fig.layout.xaxis.update(showticklabels=False)
 top_fig.layout.yaxis.update(showticklabels=False)
 
-# top_fig.update_xaxes(matches='x2')
-# top_fig.update_yaxes(matches='y2')
-
-sxm_fname = "C:\\Users\omicron_vt\\The University of Nottingham\\NottsNano - Instruments\\Unisoku LT\Results\\2021_12_13_TrainingWheelsOff\Au(111)_manipulation_1198.sxm"  # TODO replace this with upload component, eventually multiupload for dat spectra
-
+spectra_fig = go.Figure()
+spectra_fig.update_layout(title="Spectra",
+                      width=1200,
+                      height=600,
+                      margin={'t': 100, 'b': 20, 'r': 20, 'l': 20})
 
 @app.callback(Output('ref-image', 'figure'),
               Output('spectra-data', 'data'),
@@ -58,7 +56,7 @@ def set_core_figs(spectra_path, sxm_path, image_channel):
     dot3ds_data_dict = dot3ds_2dict(dot3ds_data)
 
     if sxm_path is not (None or ""):
-        sxm_data = load_img(sxm_fname)
+        sxm_data = load_img(sxm_path)
         sxm_data_dict = sxm2dict(sxm_data)
     else:
         sxm_data = None
@@ -70,10 +68,10 @@ def set_core_figs(spectra_path, sxm_path, image_channel):
     elif image_channel in dot3ds_data_dict.keys():
         res = dot3ds_data.header["dim_px"]
         resizing = res + [-1]
-        background_img = np.array(dot3ds_data_dict[image_channel]).reshape(resizing)[:, :, 0]   #for now slice it, replace with slider in future
+        background_img = np.array(dot3ds_data_dict[image_channel]).reshape(resizing)[:, :,
+                         0]  # for now slice it, replace with slider in future
     else:
         background_img = sxm_data_dict[image_channel]
-
 
     updated_top_fig = top_fig
     # updated_top_fig = callbacks.set_title(updated_top_fig, dot3ds_data.basename)
@@ -85,33 +83,40 @@ def set_core_figs(spectra_path, sxm_path, image_channel):
 root_layout = html.Div([
     html.Hr(),
     html.Div([
-        dcc.Markdown("**Spectra: **",
-                     style={'width': '100px', 'display': 'inline-block'}),
+        dcc.Markdown("** Spectra: **",
+                     style={'width': '150px', 'display': 'inline-block'}),
         dcc.Input(
             id="spectra-upload",
             type="text",
             persistence=True,
             debounce=True,
-            style={'width': '400px'},
+            style={'width': '450px'},
             placeholder=".3ds or .dat")]),
     html.Div([
-        dcc.Markdown("**Image (opt.): **",
-                     style={'width': '100px', 'display': 'inline-block'}),
+        dcc.Markdown("** Image (opt.): **",
+                     style={'width': '150px', 'display': 'inline-block'}),
         dcc.Input(
             id="sxm-upload",
             type="text",
             persistence=True,
             debounce=True,
-            style={'width': '400px'},
+            style={'width': '450px'},
             placeholder=".sxm")]),
     html.Hr(),
     html.Div(
-        dcc.Dropdown(id="image-dropdown")),
+        dcc.Dropdown(id="image-dropdown",
+                     style={'width': '600px'})),
     html.Hr(),
-    html.Div(
+    html.Div([
         dcc.Graph(
             id='ref-image',
-            figure=top_fig)),
+            figure=top_fig,
+            style={'display': 'inline-block'}),
+        dcc.Graph(
+            id='ref-spectra',
+            figure=spectra_fig,
+            style={'display': 'inline-block'})
+    ])
 ])
 
 app.layout = dbc.Container(

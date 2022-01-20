@@ -29,5 +29,6 @@ def plot_positions_vs_image(top_fig, dot3ds_data, sxm_img):
                                  customdata=dot3ds_pandas.values,
                                  hovertemplate=build_spectra_hover(dot3ds_pandas)), secondary_y=True, row=1, col=1)
     top_fig.data[1].update(xaxis='x2')
-
+    top_fig.update(layout_coloraxis_showscale=False)
+    top_fig.update_layout()
     return top_fig
