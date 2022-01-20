@@ -9,9 +9,8 @@ import numpy as np
 from dash import dcc, html
 from dash.dependencies import Input, Output, State
 from dash_bootstrap_templates import load_figure_template
-from plotly import graph_objects as go
 
-import callbacks
+import plotting
 from data import load_img, load_grid, dot3ds_2dict, sxm2dict
 from utils import build_dropdown_options, combine_click_selects
 
@@ -21,21 +20,8 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.DARKLY, dbc_css])
 app.title = "Spectra Explorer"
 load_figure_template(["darkly"])
 
-image_fig = go.Figure()
-image_fig.update_layout(title="Spectra Position",
-                              width=600,
-                              height=600,
-                              autosize=True,
-                              xaxis_title="x (m)",
-                              yaxis_title="y (m)",
-                              margin={'t': 100, 'b': 20, 'r': 20, 'l': 20})
-
-spectra_fig = go.Figure()
-spectra_fig.update_layout(title="Spectra",
-                          xaxis_title="Sweep",
-                          width=1200,
-                          height=600,
-                          margin={'t': 100, 'b': 20, 'r': 20, 'l': 20})
+image_fig = plotting.make_image_plot()
+spectra_fig = plotting.make_spectra_fig()
 
 
 @app.callback(Output('ref-image', 'figure'),
@@ -72,35 +58,33 @@ def set_core_figs(spectra_path, sxm_path, image_channel):
         background_img = sxm_data_dict[image_channel]
 
     # updated_top_fig = callbacks.set_title(updated_top_fig, dot3ds_data.basename)
-    updated_top_fig = callbacks.plot_positions_vs_image(dot3ds_data_dict, background_img)
+    updated_top_fig = plotting.plot_positions_vs_image(dot3ds_data_dict, background_img)
 
     return updated_top_fig, json.dumps(dot3ds_data_dict), dropdown_opts, channel_dropdown_opts
 
 
 @app.callback(Output('ref-spectra', 'figure'),
+              Output('btn-clear-old-data', 'data'),
               Input('ref-image', 'clickData'),
               Input('ref-image', 'selectedData'),
               State('spectra-data', 'data'),
-              Input('y-channel-dropdown', 'value'))
-def spectraplotter(clickdata, selectdata, dot3dsdata_dict, selected_y_channels):
-    if dot3dsdata_dict is None:
-        return spectra_fig
+              Input('y-channel-dropdown', 'value'),
+              Input('btn-clear-spec', 'n_clicks'),
+              State('btn-clear-old-data', 'data'),
+              prevent_initial_call=True)
+def spectraplotter(clickdata, selectdata, dot3dsdata_dict, selected_y_channels, clearbutton_presses,
+                   old_clearbutton_presses):
+    if old_clearbutton_presses is None or clearbutton_presses is None:
+        old_clearbutton_presses = clearbutton_presses = 0
+    if clearbutton_presses > old_clearbutton_presses:
+        return plotting.make_spectra_fig(), clearbutton_presses
 
     dot3dsdata_dict = json.loads(dot3dsdata_dict)
     useful_data = combine_click_selects([clickdata, selectdata])
-    all_y = np.zeros((len(useful_data) * len(selected_y_channels), len(dot3dsdata_dict["sweep_signal"])))
-    i = 0
-    for pointindex, metadata in useful_data.items():
-        for y_channel in selected_y_channels:
-            all_y[i, :] = dot3dsdata_dict[y_channel][pointindex]
-            spectra_fig.add_trace(go.Scatter(x=dot3dsdata_dict["sweep_signal"],
-                                             y=dot3dsdata_dict[y_channel][pointindex],
-                                             name=f"({useful_data[pointindex]['x']:.2g}, "
-                                                  f"{useful_data[pointindex]['y']:.2g})"))
-            i += 1
 
-    spectra_fig.update_layout(yaxis_title=selected_y_channels[0])
-    return spectra_fig
+    spectra_fig = plotting.plot_spectra(useful_data, selected_y_channels, dot3dsdata_dict)
+
+    return spectra_fig, clearbutton_presses
 
 
 root_layout = html.Div([
@@ -113,6 +97,7 @@ root_layout = html.Div([
         dcc.Input(
             id="spectra-upload",
             type="text",
+            spellCheck=False,
             persistence=True,
             debounce=True,
             style={'width': '1640px'},
@@ -125,6 +110,7 @@ root_layout = html.Div([
         dcc.Input(
             id="sxm-upload",
             type="text",
+            spellCheck=False,
             persistence=True,
             debounce=True,
             style={'width': '1640px'},
@@ -138,8 +124,15 @@ root_layout = html.Div([
         dcc.Dropdown(id="y-channel-dropdown",
                      placeholder="Spectra Channel",
                      multi=True,
-                     style={'width': '1200px',
-                            'display': 'inline-block'})]),
+                     style={'width': '1000px',
+                            'display': 'inline-block'}),
+        dbc.Button("Clear Spectra", id="btn-clear-spec",
+                   size="sm",
+                   style={'width': '200px',
+                          'height': "36px",
+                          "position": "relative", "bottom": "14px",  # This is misaligned for some reason.
+                          'display': 'inline-block'})]
+    ),
     html.Hr(),
     html.Div([
         dcc.Graph(
@@ -155,7 +148,8 @@ root_layout = html.Div([
 
 app.layout = dbc.Container(
     [root_layout,
-     dcc.Store(id='spectra-data')],
+     dcc.Store(id='spectra-data'),
+     dcc.Store(id='btn-clear-old-data')],
     fluid=True,
     className="dbc"
 )
