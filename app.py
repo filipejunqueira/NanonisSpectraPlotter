@@ -61,7 +61,7 @@ def set_core_figs(spectra_path, sxm_path, image_channel):
     if image_channel is None:
         return go.Figure(), json.dumps(dot3ds_data_dict), dropdown_opts
     elif image_channel in dot3ds_data_dict.keys():
-        res = dot3ds_data.header["dim_px"]
+        res = dot3ds_data.header["dim_px"][::-1]
         resizing = res + [-1]
         background_img = np.array(dot3ds_data_dict[image_channel]).reshape(resizing)[:, :,
                          0]  # for now slice it, replace with slider in future

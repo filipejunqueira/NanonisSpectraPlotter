@@ -10,7 +10,7 @@ def mask_nan(img: np.ndarray, nan_value=0):
     return img
 
 
-def mpl_to_plotly(cmap, pl_entries=11, rdigits=2):
+def mpl_to_plotly(cmap, pl_entries=30, rdigits=6):
     scale = np.linspace(0, 1, pl_entries)
     colors = (cmap(scale)[:, :3]*255).astype(np.uint8)
     pl_colorscale = [[round(s, rdigits), f'rgb{tuple(color)}'] for s, color in zip(scale, colors)]
