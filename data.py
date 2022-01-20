@@ -29,6 +29,7 @@ def sxm2pil(img: np.ndarray, min_cutoff=None, max_cutoff=None, cmap=nanomap):
 
 def dot3ds_2dict(grid: napy.read.Grid):
     out_dict = grid.header
+    out_dict["basename"] = grid.basename
     for key, val in grid.signals.items():
         if val.ndim <= 2:
             out_dict[key] = val.ravel().tolist()
@@ -43,3 +44,4 @@ def dot3ds_params2pd(dot3ds_data_dict):
     data = np.array(dot3ds_data_dict["params"])
     df = pd.DataFrame(columns=all_params, data=data).dropna(axis=1, how="all")
     return df
+

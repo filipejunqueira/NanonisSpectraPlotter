@@ -1,11 +1,5 @@
 import numpy as np
 import pandas as pd
-from PIL import Image
-import matplotlib.pyplot as plt
-from matplotlib import cm
-from nOmicron.utils.plotting import nanomap
-import nanonispy as napy
-import os
 
 
 def mask_nan(img: np.ndarray, nan_value=0):
@@ -22,5 +16,13 @@ def build_spectra_hover(params_pandas: pd.DataFrame):
     hovertemplate += '<extra></extra>'
     return hovertemplate
 
-def swap_slashes(s: str):
-    return s.replace(os.sep, '/')
+
+def build_dropdown_options(grid_dict, sxm):
+    if sxm is None:
+        sxm_channels = []
+    else:
+        sxm_channels = list(sxm.keys())
+
+    all_channels = sxm_channels + grid_dict["fixed_parameters"] + grid_dict["experimental_parameters"]
+
+    return [{"label": val, "value": val} for val in all_channels]

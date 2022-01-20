@@ -6,18 +6,20 @@ import json
 import dash
 import dash_bootstrap_components as dbc
 from dash import dcc, html
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 from dash_bootstrap_templates import load_figure_template
 from plotly import graph_objects as go
 from plotly.subplots import make_subplots
 
 import callbacks
 from data import load_img, load_grid, dot3ds_2dict
+from utils import build_dropdown_options
 
 dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates@V1.0.4/dbc.min.css"
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.DARKLY, dbc_css])
-load_figure_template(["darkly"])
+# app._favicon = ("path_to_folder/(your_icon).co")
 app.title = "Spectra Explorer"
+load_figure_template(["darkly"])
 
 fig = go.Figure()
 
@@ -40,30 +42,46 @@ top_fig.layout.yaxis.update(showticklabels=False)
 # top_fig.update_yaxes(matches='y2')
 
 sxm_fname = "C:\\Users\omicron_vt\\The University of Nottingham\\NottsNano - Instruments\\Unisoku LT\Results\\2021_12_13_TrainingWheelsOff\Au(111)_manipulation_1198.sxm"  # TODO replace this with upload component, eventually multiupload for dat spectra
-sxm_data = load_img(sxm_fname)
-sxm_channel = "Z"
-sxm_trace_direction = "forward"
-sxm_img = sxm_data[sxm_channel][sxm_trace_direction]
 
 
 @app.callback(Output('ref-image', 'figure'),
               Output('spectra-data', 'data'),
-              Input("spectra-upload", 'value'))
-def set_core_figs(spectra_path):
+              Output('image-dropdown', 'options'),
+              Input("spectra-upload", 'value'),
+              Input('sxm-upload', 'value'),
+              Input('image-dropdown', 'options'))
+def set_core_figs(spectra_path, sxm_path, image_channel):
     if spectra_path is None:
-        return top_fig, json.dumps("")
+        return top_fig, json.dumps(""), []
 
     dot3ds_data = load_grid(spectra_path)
     dot3ds_data_dict = dot3ds_2dict(dot3ds_data)
+
+    if sxm_path is not None:
+        sxm_data = load_img(sxm_path)
+        sxm_channel = "Z"
+        sxm_trace_direction = "forward"
+        sxm_img = sxm_data[sxm_channel][sxm_trace_direction]
+    else:
+        sxm_data = load_img(sxm_fname)
+        sxm_channel = "Z"
+        sxm_trace_direction = "forward"
+        sxm_img = sxm_data[sxm_channel][sxm_trace_direction]
+
+    dropdown_opts = build_dropdown_options(dot3ds_data_dict, sxm_data)
+
+    # if image_channel is None:
+    #     return top_fig, json.dumps(dot3ds_data_dict), json.dumps(sxm_opts)
 
     updated_top_fig = top_fig
     # updated_top_fig = callbacks.set_title(updated_top_fig, dot3ds_data.basename)
     updated_top_fig = callbacks.plot_positions_vs_image(updated_top_fig, dot3ds_data_dict, sxm_img)
 
-    return updated_top_fig, json.dumps(dot3ds_data_dict)
+    return updated_top_fig, json.dumps(dot3ds_data_dict), dropdown_opts
 
 
 root_layout = html.Div([
+    html.Hr(),
     html.Div([
         dcc.Markdown("**Spectra: **",
                      style={'width': '100px', 'display': 'inline-block'}),
@@ -75,7 +93,7 @@ root_layout = html.Div([
             style={'width': '400px'},
             placeholder=".3ds or .dat")]),
     html.Div([
-        dcc.Markdown("**Optional sxm: **",
+        dcc.Markdown("**Image (opt.): **",
                      style={'width': '100px', 'display': 'inline-block'}),
         dcc.Input(
             id="sxm-upload",
@@ -84,6 +102,10 @@ root_layout = html.Div([
             debounce=True,
             style={'width': '400px'},
             placeholder=".sxm")]),
+    html.Hr(),
+    html.Div(
+        dcc.Dropdown(id="image-dropdown")),
+    html.Hr(),
     html.Div(
         dcc.Graph(
             id='ref-image',
