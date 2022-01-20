@@ -51,13 +51,13 @@ sxm_fname = "C:\\Users\omicron_vt\\The University of Nottingham\\NottsNano - Ins
               Input('sxm-upload', 'value'),
               Input('image-dropdown', 'options'))
 def set_core_figs(spectra_path, sxm_path, image_channel):
-    if spectra_path is None:
+    if spectra_path is (None or ""):
         return top_fig, json.dumps(""), []
 
     dot3ds_data = load_grid(spectra_path)
     dot3ds_data_dict = dot3ds_2dict(dot3ds_data)
 
-    if sxm_path is not None:
+    if sxm_path is not (None or ""):
         sxm_data = load_img(sxm_path)
         sxm_channel = "Z"
         sxm_trace_direction = "forward"

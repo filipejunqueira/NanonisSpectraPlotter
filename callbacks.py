@@ -23,7 +23,7 @@ def plot_positions_vs_image(top_fig, dot3ds_data, sxm_img):
     top_fig.data = []
     top_fig.add_trace(px.imshow(sxm2pil(mask_nan(sxm_img))).data[0],
                       secondary_y=False, row=1, col=1)
-    top_fig.add_trace(go.Scatter(x=dot3ds_pandas["X (m)"].round(12), y=dot3ds_pandas["Z (m)"].round(12), mode="markers",
+    top_fig.add_trace(go.Scatter(x=dot3ds_pandas["X (m)"], y=dot3ds_pandas["Y (m)"], mode="markers",
                                  hoverinfo='text',
                                  text=dot3ds_pandas.columns,
                                  customdata=dot3ds_pandas.values,
