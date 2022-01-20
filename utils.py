@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from nOmicron.utils.plotting import nanomap
 import nanonispy as napy
+import os
 
 
 def mask_nan(img: np.ndarray, nan_value=0):
@@ -21,3 +22,5 @@ def build_spectra_hover(params_pandas: pd.DataFrame):
     hovertemplate += '<extra></extra>'
     return hovertemplate
 
+def swap_slashes(s: str):
+    return s.replace(os.sep, '/')

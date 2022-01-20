@@ -27,8 +27,19 @@ def sxm2pil(img: np.ndarray, min_cutoff=None, max_cutoff=None, cmap=nanomap):
     return pillow_img
 
 
-def dot3ds_params2pd(grid: napy.read.Grid):
-    all_params = grid.header["fixed_parameters"] + grid.header["experimental_parameters"]
-    data_byteswapped = grid.signals["params"][0, :, :].byteswap().newbyteorder()    # odd bug
-    df = pd.DataFrame(columns=all_params, data=data_byteswapped).dropna(axis=1, how="all")
+def dot3ds_2dict(grid: napy.read.Grid):
+    out_dict = grid.header
+    for key, val in grid.signals.items():
+        if val.ndim <= 2:
+            out_dict[key] = val.ravel().tolist()
+        else:
+            out_dict[key] = val.reshape(-1, val.shape[-1]).tolist()
+
+    return out_dict
+
+
+def dot3ds_params2pd(dot3ds_data_dict):
+    all_params = dot3ds_data_dict["fixed_parameters"] + dot3ds_data_dict["experimental_parameters"]
+    data = np.array(dot3ds_data_dict["params"])
+    df = pd.DataFrame(columns=all_params, data=data).dropna(axis=1, how="all")
     return df
