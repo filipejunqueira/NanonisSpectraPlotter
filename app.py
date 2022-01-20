@@ -11,6 +11,7 @@ from dash.dependencies import Input, Output
 from dash_bootstrap_templates import load_figure_template
 from plotly import graph_objects as go
 from plotly.subplots import make_subplots
+from plotly import express as px
 
 import callbacks
 from data import load_img, load_grid, dot3ds_2dict, sxm2dict
@@ -22,19 +23,8 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.DARKLY, dbc_css])
 app.title = "Spectra Explorer"
 load_figure_template(["darkly"])
 
-top_fig = make_subplots(specs=[[{"secondary_y": True}]])
-top_fig.update_layout(title="Spectra Position",
-                      width=600,
-                      height=600,
-                      autosize=True,
-                      template="darkly",
-                      xaxis={'side': 'top'},
-                      xaxis2={'anchor': 'y', 'overlaying': 'x', 'side': 'bottom'},
-                      yaxis={'side': 'right'},
-                      yaxis2={'side': 'left'},
-                      margin={'t': 100, 'b': 20, 'r': 20, 'l': 20})
-top_fig.layout.xaxis.update(showticklabels=False)
-top_fig.layout.yaxis.update(showticklabels=False)
+top_fig = go.Figure()
+
 
 spectra_fig = go.Figure()
 spectra_fig.update_layout(title="Spectra",
@@ -64,7 +54,7 @@ def set_core_figs(spectra_path, sxm_path, image_channel):
     dropdown_opts = build_dropdown_options(dot3ds_data, sxm_data)
 
     if image_channel is None:
-        background_img = np.array([0])
+        return go.Figure(), json.dumps(dot3ds_data_dict), dropdown_opts
     elif image_channel in dot3ds_data_dict.keys():
         res = dot3ds_data.header["dim_px"]
         resizing = res + [-1]
@@ -73,9 +63,8 @@ def set_core_figs(spectra_path, sxm_path, image_channel):
     else:
         background_img = sxm_data_dict[image_channel]
 
-    updated_top_fig = top_fig
     # updated_top_fig = callbacks.set_title(updated_top_fig, dot3ds_data.basename)
-    updated_top_fig = callbacks.plot_positions_vs_image(updated_top_fig, dot3ds_data_dict, background_img)
+    updated_top_fig = callbacks.plot_positions_vs_image(dot3ds_data_dict, background_img)
 
     return updated_top_fig, json.dumps(dot3ds_data_dict), dropdown_opts
 

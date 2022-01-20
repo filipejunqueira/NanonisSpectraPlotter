@@ -10,6 +10,13 @@ def mask_nan(img: np.ndarray, nan_value=0):
     return img
 
 
+def mpl_to_plotly(cmap, pl_entries=11, rdigits=2):
+    scale = np.linspace(0, 1, pl_entries)
+    colors = (cmap(scale)[:, :3]*255).astype(np.uint8)
+    pl_colorscale = [[round(s, rdigits), f'rgb{tuple(color)}'] for s, color in zip(scale, colors)]
+    return pl_colorscale
+
+
 def build_spectra_hover(params_pandas: pd.DataFrame):
     hovertemplate = ""
     for i, col in enumerate(params_pandas.columns):
@@ -32,3 +39,4 @@ def build_dropdown_options(grid: napy.read.Grid, sxm: napy.read.Scan):
     all_channels = grid_signal_channels + grid.header["fixed_parameters"] + grid.header["experimental_parameters"] + sxm_channels
 
     return [{"label": val, "value": val} for val in all_channels]
+
