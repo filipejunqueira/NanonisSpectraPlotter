@@ -10,12 +10,10 @@ from dash import dcc, html
 from dash.dependencies import Input, Output
 from dash_bootstrap_templates import load_figure_template
 from plotly import graph_objects as go
-from plotly.subplots import make_subplots
-from plotly import express as px
 
 import callbacks
 from data import load_img, load_grid, dot3ds_2dict, sxm2dict
-from utils import build_dropdown_options
+from utils import build_dropdown_options, combine_click_selects
 
 dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates@V1.0.4/dbc.min.css"
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.DARKLY, dbc_css])
@@ -33,9 +31,10 @@ top_fig.update_layout(title="Spectra Position",
 
 spectra_fig = go.Figure()
 spectra_fig.update_layout(title="Spectra",
-                      width=1200,
-                      height=600,
-                      margin={'t': 100, 'b': 20, 'r': 20, 'l': 20})
+                          width=1200,
+                          height=600,
+                          margin={'t': 100, 'b': 20, 'r': 20, 'l': 20})
+
 
 @app.callback(Output('ref-image', 'figure'),
               Output('spectra-data', 'data'),
@@ -72,6 +71,16 @@ def set_core_figs(spectra_path, sxm_path, image_channel):
     updated_top_fig = callbacks.plot_positions_vs_image(dot3ds_data_dict, background_img)
 
     return updated_top_fig, json.dumps(dot3ds_data_dict), dropdown_opts
+
+
+@app.callback(Output('ref-spectra', 'figure'),
+              Input('ref-image', 'clickData'),
+              Input('ref-image', 'selectedData'))
+def spectraplotter(clickdata, selectdata):
+    useful_data = combine_click_selects([clickdata, selectdata])
+
+
+    return go.Figure()
 
 
 root_layout = html.Div([

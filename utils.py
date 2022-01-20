@@ -4,12 +4,6 @@ import nanonispy as napy
 from data import sxm2dict
 
 
-def mask_nan(img: np.ndarray, nan_value=0):
-    img = img.copy()
-    img[np.isnan(img)] = nan_value
-    return img
-
-
 def mpl_to_plotly(cmap, pl_entries=30, rdigits=6):
     scale = np.linspace(0, 1, pl_entries)
     colors = (cmap(scale)[:, :3]*255).astype(np.uint8)
@@ -40,3 +34,15 @@ def build_dropdown_options(grid: napy.read.Grid, sxm: napy.read.Scan):
 
     return [{"label": val, "value": val} for val in all_channels]
 
+
+def combine_click_selects(events: list):
+    all_outs = {}
+    for interactiontype in events:
+        if interactiontype is None:
+            continue
+        for event in interactiontype["points"]:
+            all_outs[event["pointIndex"]] = {"customdata": event["customdata"],
+                                             "x": event["x"],
+                                             "y": event["y"]}
+
+    return all_outs
