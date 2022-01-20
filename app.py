@@ -24,7 +24,12 @@ app.title = "Spectra Explorer"
 load_figure_template(["darkly"])
 
 top_fig = go.Figure()
-
+top_fig.update_layout(title="Spectra Position",
+                      width=600,
+                      height=600,
+                      autosize=True,
+                      template="darkly",
+                      margin={'t': 100, 'b': 20, 'r': 20, 'l': 20})
 
 spectra_fig = go.Figure()
 spectra_fig.update_layout(title="Spectra",

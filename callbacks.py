@@ -19,16 +19,18 @@ def set_title(top_fig, filename):
     return top_fig
 
 
-def plot_positions_vs_image(dot3ds_data_dict, sxm_img):
-    x_axis = np.linspace(dot3ds_data_dict["pos_xy"][0],
-                         dot3ds_data_dict["pos_xy"][0] + dot3ds_data_dict["size_xy"][0],
-                         sxm_img.shape[0]) - (dot3ds_data_dict["size_xy"][0] / 2)
-    y_axis = np.linspace(dot3ds_data_dict["pos_xy"][1],
-                         dot3ds_data_dict["pos_xy"][1] + dot3ds_data_dict["size_xy"][1],
-                         sxm_img.shape[1]) - (dot3ds_data_dict["size_xy"][1] / 2)
+def plot_positions_vs_image(dot3ds_data_dict, img):
     dot3ds_pandas = dot3ds_params2pd(dot3ds_data_dict)
 
-    top_fig = px.imshow(sxm_img, color_continuous_scale=mpl_to_plotly(nanomap), x=x_axis, y=y_axis)
+    centre = dot3ds_data_dict["pos_xy"]
+    size = dot3ds_data_dict["size_xy"]
+
+    x_axis = np.linspace(centre[0] - size[0] / 2, centre[0] + size[0] / 2, img.shape[0])
+    y_axis = np.linspace(centre[1] - size[1] / 2, centre[1] + size[1] / 2, img.shape[1])
+
+    # Plotting
+    top_fig = px.imshow(np.rot90(img), color_continuous_scale=mpl_to_plotly(nanomap), x=x_axis, y=y_axis,
+                        origin="lower", aspect="equal")
     top_fig.add_trace(go.Scatter(x=dot3ds_pandas["X (m)"], y=dot3ds_pandas["Y (m)"], mode="markers",
                                  hoverinfo='text',
                                  text=dot3ds_pandas.columns,
@@ -40,10 +42,6 @@ def plot_positions_vs_image(dot3ds_data_dict, sxm_img):
                           height=600,
                           autosize=True,
                           template="darkly",
-                          xaxis={'side': 'top'},
-                          xaxis2={'anchor': 'y', 'overlaying': 'x', 'side': 'bottom'},
-                          yaxis={'side': 'right'},
-                          yaxis2={'side': 'left'},
                           margin={'t': 100, 'b': 20, 'r': 20, 'l': 20})
 
     return top_fig
