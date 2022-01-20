@@ -20,18 +20,20 @@ def plot_positions_vs_image(dot3ds_data_dict, img):
                          dot3ds_data_dict["dim_px"][1])
 
     # Plotting
-    spectra_fig = px.imshow(img, color_continuous_scale=mpl_to_plotly(nanomap), x=x_axis, y=y_axis,
+    image_fig = px.imshow(img, color_continuous_scale=mpl_to_plotly(nanomap), x=x_axis, y=y_axis,
                             origin="lower", aspect="equal")
-    spectra_fig.add_trace(go.Scatter(x=dot3ds_pandas["X (m)"], y=dot3ds_pandas["Y (m)"], mode="markers",
+    image_fig.add_trace(go.Scatter(x=dot3ds_pandas["X (m)"], y=dot3ds_pandas["Y (m)"], mode="markers",
                                      hoverinfo='text',
                                      text=dot3ds_pandas.columns,
                                      customdata=dot3ds_pandas.values,
                                      hovertemplate=build_spectra_hover(dot3ds_pandas)))
 
-    spectra_fig.update_layout(title="Spectra Position",
+    image_fig.update_layout(title="Spectra Position",
                               width=600,
                               height=600,
                               autosize=True,
+                              xaxis_title="x (m)",
+                              yaxis_title="y (m)",
                               margin={'t': 100, 'b': 20, 'r': 20, 'l': 20})
 
-    return spectra_fig
+    return image_fig
