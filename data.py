@@ -6,7 +6,7 @@ from nOmicron.utils.plotting import nanomap
 
 
 def load_img(filename: str):
-    return napy.read.Scan(filename).signals
+    return napy.read.Scan(filename)
 
 
 def load_grid(filename: str):
@@ -27,6 +27,15 @@ def sxm2pil(img: np.ndarray, min_cutoff=None, max_cutoff=None, cmap=nanomap):
     return pillow_img
 
 
+def sxm2dict(sxm: napy.read.Scan):
+    flat_dict = {}
+    for outterdict, outterval in sxm.signals.items():
+        for innerdict, innerval in sxm.signals[outterdict].items():
+            flat_dict[f"{outterdict} ({innerdict})"] = innerval
+
+    return flat_dict
+
+
 def dot3ds_2dict(grid: napy.read.Grid):
     out_dict = grid.header
     out_dict["basename"] = grid.basename
@@ -35,6 +44,9 @@ def dot3ds_2dict(grid: napy.read.Grid):
             out_dict[key] = val.ravel().tolist()
         else:
             out_dict[key] = val.reshape(-1, val.shape[-1]).tolist()
+
+    for i, param in enumerate(grid.header["fixed_parameters"] + grid.header["experimental_parameters"]):
+        out_dict[param] = grid.signals["params"][:, :, i].ravel().tolist()
 
     return out_dict
 

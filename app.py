@@ -2,7 +2,7 @@
 # visit http://127.0.0.1:8050/ in your web browser.
 
 import json
-
+import numpy as np
 import dash
 import dash_bootstrap_components as dbc
 from dash import dcc, html
@@ -12,7 +12,7 @@ from plotly import graph_objects as go
 from plotly.subplots import make_subplots
 
 import callbacks
-from data import load_img, load_grid, dot3ds_2dict
+from data import load_img, load_grid, dot3ds_2dict, sxm2dict
 from utils import build_dropdown_options
 
 dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates@V1.0.4/dbc.min.css"
@@ -49,7 +49,7 @@ sxm_fname = "C:\\Users\omicron_vt\\The University of Nottingham\\NottsNano - Ins
               Output('image-dropdown', 'options'),
               Input("spectra-upload", 'value'),
               Input('sxm-upload', 'value'),
-              Input('image-dropdown', 'options'))
+              Input('image-dropdown', 'value'))
 def set_core_figs(spectra_path, sxm_path, image_channel):
     if spectra_path is (None or ""):
         return top_fig, json.dumps(""), []
@@ -58,24 +58,26 @@ def set_core_figs(spectra_path, sxm_path, image_channel):
     dot3ds_data_dict = dot3ds_2dict(dot3ds_data)
 
     if sxm_path is not (None or ""):
-        sxm_data = load_img(sxm_path)
-        sxm_channel = "Z"
-        sxm_trace_direction = "forward"
-        sxm_img = sxm_data[sxm_channel][sxm_trace_direction]
-    else:
         sxm_data = load_img(sxm_fname)
-        sxm_channel = "Z"
-        sxm_trace_direction = "forward"
-        sxm_img = sxm_data[sxm_channel][sxm_trace_direction]
+        sxm_data_dict = sxm2dict(sxm_data)
+    else:
+        sxm_data = None
 
-    dropdown_opts = build_dropdown_options(dot3ds_data_dict, sxm_data)
+    dropdown_opts = build_dropdown_options(dot3ds_data, sxm_data)
 
-    # if image_channel is None:
-    #     return top_fig, json.dumps(dot3ds_data_dict), json.dumps(sxm_opts)
+    if image_channel is None:
+        background_img = np.array([0])
+    elif image_channel in dot3ds_data_dict.keys():
+        res = dot3ds_data.header["dim_px"]
+        resizing = res + [-1]
+        background_img = np.array(dot3ds_data_dict[image_channel]).reshape(resizing)[:, :, 0]   #for now slice it, replace with slider in future
+    else:
+        background_img = sxm_data_dict[image_channel]
+
 
     updated_top_fig = top_fig
     # updated_top_fig = callbacks.set_title(updated_top_fig, dot3ds_data.basename)
-    updated_top_fig = callbacks.plot_positions_vs_image(updated_top_fig, dot3ds_data_dict, sxm_img)
+    updated_top_fig = callbacks.plot_positions_vs_image(updated_top_fig, dot3ds_data_dict, background_img)
 
     return updated_top_fig, json.dumps(dot3ds_data_dict), dropdown_opts
 

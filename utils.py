@@ -1,5 +1,7 @@
 import numpy as np
 import pandas as pd
+import nanonispy as napy
+from data import sxm2dict
 
 
 def mask_nan(img: np.ndarray, nan_value=0):
@@ -17,12 +19,16 @@ def build_spectra_hover(params_pandas: pd.DataFrame):
     return hovertemplate
 
 
-def build_dropdown_options(grid_dict, sxm):
+def build_dropdown_options(grid: napy.read.Grid, sxm: napy.read.Scan):
     if sxm is None:
         sxm_channels = []
     else:
-        sxm_channels = list(sxm.keys())
+        sxm_channels = list(sxm2dict(sxm).keys())
 
-    all_channels = sxm_channels + grid_dict["fixed_parameters"] + grid_dict["experimental_parameters"]
+    grid_signal_channels = []
+    for signal_channel, value in grid.signals.items():
+        if signal_channel not in ["params", "sweep_signal"]:
+            grid_signal_channels += [signal_channel]
+    all_channels = grid_signal_channels + grid.header["fixed_parameters"] + grid.header["experimental_parameters"] + sxm_channels
 
     return [{"label": val, "value": val} for val in all_channels]
