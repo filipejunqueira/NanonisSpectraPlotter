@@ -52,8 +52,7 @@ def set_core_figs(spectra_path, sxm_path, image_channel):
     elif image_channel in dot3ds_data_dict.keys():
         res = dot3ds_data.header["dim_px"][::-1]
         resizing = res + [-1]
-        background_img = np.array(dot3ds_data_dict[image_channel]).reshape(resizing)[:, :,
-                         0]  # for now slice it, replace with slider in future
+        background_img = np.array(dot3ds_data_dict[image_channel]).reshape(resizing).mean(axis=-1)  # for now slice it, replace with slider in future
     else:
         background_img = sxm_data_dict[image_channel]
 
@@ -154,13 +153,6 @@ app.layout = dbc.Container(
     className="dbc"
 )
 
-# html.Label(["Select color bar "
-#             "range:",
-#             dcc.RangeSlider(
-#                 id='colorbar-slider',
-# min=0. max=10,
-# tooltip={"placement": "bottom", "always_visible": True}
-#             ), ])
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=False)
