@@ -33,16 +33,11 @@ def make_spectra_fig():
 def plot_positions_vs_image(dot3ds_data_dict, img):
     dot3ds_pandas = dot3ds_params2pd(dot3ds_data_dict)
 
-    x_square = np.abs(
-        (dot3ds_pandas["X (m)"].max() - dot3ds_pandas["X (m)"].min()) / (dot3ds_data_dict["dim_px"][0] - 1))
-    y_square = np.abs(
-        (dot3ds_pandas["Y (m)"].max() - dot3ds_pandas["Y (m)"].min()) / (dot3ds_data_dict["dim_px"][1] - 1))
-
-    x_axis = np.linspace(dot3ds_pandas["X (m)"].min() - (x_square / 2),
-                         dot3ds_pandas["X (m)"].max() + (x_square / 2),
+    x_axis = np.linspace(dot3ds_pandas["X (m)"].min(),
+                         dot3ds_pandas["X (m)"].max(),
                          dot3ds_data_dict["dim_px"][0])
-    y_axis = np.linspace(dot3ds_pandas["Y (m)"].min() - (y_square / 2),
-                         dot3ds_pandas["Y (m)"].max() + (y_square / 2),
+    y_axis = np.linspace(dot3ds_pandas["Y (m)"].min(),
+                         dot3ds_pandas["Y (m)"].max(),
                          dot3ds_data_dict["dim_px"][1])
 
     # Plotting
