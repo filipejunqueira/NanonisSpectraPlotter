@@ -1,7 +1,9 @@
 # Run this app with `python app.py` and
 # visit http://127.0.0.1:8050/ in your web browser.
-
+import base64
+import io
 import json
+from io import StringIO
 
 import dash
 import dash_bootstrap_components as dbc
@@ -9,9 +11,13 @@ import numpy as np
 from dash import dcc, html
 from dash.dependencies import Input, Output, State
 from dash_bootstrap_templates import load_figure_template
+from nanonispy.read import Grid
 
+import data
 import plotting
-from data import load_img, load_grid, dot3ds_2dict, sxm2dict
+import utils
+from data import load_img, load_grid, dot3ds_2dict, sxm2dict, make_tmpfile
+from dataloader.common import make_empty_data_dict
 from utils import build_dropdown_options, combine_click_selects
 
 dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates@V1.0.4/dbc.min.css"
@@ -86,6 +92,31 @@ def spectraplotter(clickdata, selectdata, dot3dsdata_dict, selected_y_channels, 
     return spectra_fig, clearbutton_presses
 
 
+
+
+@app.callback(Output('output-data-upload', 'data'),
+              Input('upload-data', 'contents'),
+              State('upload-data', 'filename'),
+              prevent_initial_call=True)
+def load_file(list_of_contents, list_of_names):
+    # If reset button is clicked, recreate resource dict of images and spectra
+    resource_data_dict = make_empty_data_dict()
+
+    # Load in the data from each file into a unified, jsonable dictionary to be stored
+    for contents, fname in zip(list_of_contents, list_of_names):
+        resource_data_dict = data.loadfile(contents, fname,  resource_data_dict)
+
+    print(resource_data_dict)
+
+    return resource_data_dict
+
+
+
+
+
+
+
+
 root_layout = html.Div([
     html.Hr(),
     html.Div([
@@ -148,7 +179,27 @@ root_layout = html.Div([
 app.layout = dbc.Container(
     [root_layout,
      dcc.Store(id='spectra-data'),
-     dcc.Store(id='btn-clear-old-data')],
+     dcc.Store(id='btn-clear-old-data'),
+dcc.Store(id='output-data-upload'),
+dcc.Upload(
+        id='upload-data',
+        children=html.Div([
+            'Drag and Drop or ',
+            html.A('Select Files')
+        ]),
+        style={
+            'width': '100%',
+            'height': '60px',
+            'lineHeight': '60px',
+            'borderWidth': '1px',
+            'borderStyle': 'dashed',
+            'borderRadius': '5px',
+            'textAlign': 'center',
+            'margin': '10px'
+        },
+        # Allow multiple files to be uploaded
+        multiple=True
+    )],
     fluid=True,
     className="dbc"
 )

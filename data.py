@@ -1,8 +1,45 @@
+import base64
+import os
+
 import nanonispy as napy
 import numpy as np
 import pandas as pd
 from PIL import Image
 from nOmicron.utils.plotting import nanomap
+
+from dataloader.converters import nanonis, omicron
+from utils import get_ext
+
+
+def make_tmpfile(contents: str, orig_name: str):
+    content_type, content_string = contents.split(',')
+    decoded = base64.b64decode(content_string)
+
+    f = open(orig_name, "wb")
+    f.write(decoded)
+    f.close()
+
+
+def del_tmpfile(orig_name: str):
+    os.remove(orig_name)
+
+
+def loadfile(data, filename: str, data_dict):
+    tmp_path = f"tmp/{filename}"
+    make_tmpfile(data, tmp_path)
+
+    if get_ext(tmp_path) == "3ds":  # Use some code to generate function automatically??
+        data_dict = nanonis.add_3ds(tmp_path, data_dict)
+    elif get_ext(tmp_path) == "dat":
+        data_dict = nanonis.add_dat(tmp_path, data_dict)
+    elif get_ext(tmp_path) == "sxm":
+        data_dict = nanonis.add_sxm(tmp_path, data_dict)
+    else:
+        raise ValueError("File Format Not Supported!")
+
+    del_tmpfile(tmp_path)
+
+    return data_dict
 
 
 def load_img(filename: str):

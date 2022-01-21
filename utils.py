@@ -1,8 +1,13 @@
 import numpy as np
 import pandas as pd
 import nanonispy as napy
-from data import sxm2dict
 
+
+def get_ext(fpath):
+    return fpath.split(".")[-1]
+
+def assert_list(var):
+    return [var] if isinstance(var, str) else var
 
 def mpl_to_plotly(cmap, pl_entries=30, rdigits=6):
     scale = np.linspace(0, 1, pl_entries)
@@ -21,6 +26,8 @@ def build_spectra_hover(params_pandas: pd.DataFrame):
 
 
 def build_dropdown_options(grid: napy.read.Grid, sxm: napy.read.Scan):
+    from data import sxm2dict
+
     if sxm is None:
         sxm_channels = []
     else:
